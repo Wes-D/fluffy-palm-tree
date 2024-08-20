@@ -15,17 +15,32 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.navigation.NavController
+import com.example.charapp.Character
+import com.example.charapp.CharacterViewModel
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun CreateCharacterScreen() {
-    var selectedRace by remember { mutableStateOf("Human") }
-    var selectedArchetype by remember { mutableStateOf("Innkeeper") }
-    var stats by remember { mutableStateOf(generateStats()) }
+fun CreateCharacterScreen(
+    characterViewModel: CharacterViewModel,
+    onProceedToSummary:(Character) -> Unit
+){
+    // Initialize variables with ViewModel data if it exists
+    var generatedName by remember { mutableStateOf(characterViewModel.characterName) }
+    var selectedRace by remember { mutableStateOf(characterViewModel.race) }
+    var selectedArchetype by remember { mutableStateOf(characterViewModel.archetype) }
+    var stats by remember { mutableStateOf(characterViewModel.stats.ifEmpty { generateStats() }) }
+    var traitsAndAbilities by remember {
+        mutableStateOf(
+            if (characterViewModel.traits.isEmpty() && characterViewModel.abilities.isEmpty())
+                generateTraitsAndAbilities(selectedRace, selectedArchetype)
+            else
+                Pair(characterViewModel.traits, characterViewModel.abilities)
+        )
+    }
     var statBonuses by remember { mutableStateOf(generateStatBonuses(selectedRace)) }
     var isCustomizationEnabled by remember { mutableStateOf(false) }
-    var generatedName by remember { mutableStateOf(generateRandomName(selectedRace)) }
-    var traitsAndAbilities by remember { mutableStateOf(generateTraitsAndAbilities(selectedRace, selectedArchetype)) }
 
 
     // Scaffold to handle layout
@@ -125,6 +140,23 @@ fun CreateCharacterScreen() {
                     }) {
                         Text("Re-roll")
                     }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+                // Navigation from CreateCharacterScreen to SummaryScreen
+                Button(onClick = {
+                    onProceedToSummary(
+                        Character(
+                            name = generatedName,
+                            race = selectedRace,
+                            archetype = selectedArchetype,
+                            stats = stats,
+                            traits = traitsAndAbilities.first,
+                            abilities = traitsAndAbilities.second
+                        )
+                    )
+                }) {
+                    Text(text = "Proceed to Summary")
                 }
             }
         }
@@ -268,6 +300,4 @@ fun generateTraitsAndAbilities(race: String, archetype: String): Pair<List<Strin
 
     return traits to abilities
 }
-
-
 
