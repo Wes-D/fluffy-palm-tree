@@ -1,9 +1,14 @@
 package com.example.charapp
 
+import android.net.Uri
+import androidx.compose.ui.platform.LocalContext
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -16,8 +21,10 @@ import androidx.navigation.navArgument
 import com.example.charapp.ui.theme.CharAppTheme
 import com.example.charapp.ui.screens.HomeScreen
 import com.example.charapp.ui.screens.CreateCharacterScreen
-import com.example.charapp.ui.screens.LoadCharacterScreen
 import com.example.charapp.ui.screens.SummaryScreen
+import com.example.charapp.ui.screens.LoadCharacterScreen
+import com.example.charapp.ui.screens.loadCharacterFromJson
+import com.example.charapp.ui.screens.saveCharacterToJson
 
 
 class MainActivity : ComponentActivity() {
@@ -64,7 +71,10 @@ fun AppNavGraph(navController: NavHostController, characterViewModel: CharacterV
         }
 
         composable("summary_screen") {
+            val context = LocalContext.current
+
             SummaryScreen(
+                characterViewModel = characterViewModel,
                 characterName = characterViewModel.characterName,
                 race = characterViewModel.race,
                 archetype = characterViewModel.archetype,
@@ -72,12 +82,26 @@ fun AppNavGraph(navController: NavHostController, characterViewModel: CharacterV
                 traits = characterViewModel.traits,
                 abilities = characterViewModel.abilities,
                 onEditCharacter = { navController.popBackStack() },  // Pop back to the previous screen
-                onExportCharacter = { /* Export logic here */ }
+                onExportCharacter = { uri ->
+                    uri?.let {
+                        saveCharacterToJson(context, characterViewModel, it)
+                    }
+                },
+                onLoadCharacter = { uri ->
+                    uri?.let {
+                        loadCharacterFromJson(context, it) { loadedCharacter ->
+                            characterViewModel.updateCharacter(
+                                name = loadedCharacter.name,
+                                race = loadedCharacter.race,
+                                archetype = loadedCharacter.archetype,
+                                stats = loadedCharacter.stats,
+                                traits = loadedCharacter.traits,
+                                abilities = loadedCharacter.abilities
+                            )
+                        }
+                    }
+                }
             )
-        }
-
-        composable("load_character") {
-            LoadCharacterScreen()
         }
     }
 }

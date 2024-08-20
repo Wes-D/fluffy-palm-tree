@@ -20,6 +20,7 @@ import androidx.navigation.NavController
 import com.example.charapp.Character
 import com.example.charapp.CharacterViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun CreateCharacterScreen(
@@ -46,7 +47,9 @@ fun CreateCharacterScreen(
     // Scaffold to handle layout
     Scaffold(
         topBar = {
-            // You can add a TopBar here if desired
+            TopAppBar(
+                title = { Text(text = "Create your Character") }
+            )
         }
     ) {
         LazyColumn(
@@ -56,15 +59,7 @@ fun CreateCharacterScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             item {
-                // Title with padding and centered
-                Text(
-                    text = "Create Your Character",
-                    style = MaterialTheme.typography.titleLarge,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(vertical = 24.dp)  // Adding padding above and below title
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(92.dp))
 
                 // Race and Archetype selection horizontally
                 Row(
@@ -141,7 +136,7 @@ fun CreateCharacterScreen(
                         Text("Re-roll")
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+
                 }
                 // Navigation from CreateCharacterScreen to SummaryScreen
                 Button(onClick = {
@@ -158,6 +153,7 @@ fun CreateCharacterScreen(
                 }) {
                     Text(text = "Proceed to Summary")
                 }
+                Spacer(modifier = Modifier.height(60.dp))
             }
         }
     }

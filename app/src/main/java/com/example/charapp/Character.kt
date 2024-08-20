@@ -1,5 +1,8 @@
 package com.example.charapp
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Character(
     val name: String,
     val race: String,
