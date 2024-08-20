@@ -21,6 +21,9 @@ fun CreateCharacterScreen() {
     var selectedArchetype by remember { mutableStateOf("Innkeeper") }
     var stats by remember { mutableStateOf(generateStats()) }
     var isCustomizationEnabled by remember { mutableStateOf(false) }
+    var generatedName by remember { mutableStateOf(generateRandomName(selectedRace)) }
+    var traitsAndAbilities by remember { mutableStateOf(generateTraitsAndAbilities(selectedRace, selectedArchetype)) }
+
 
     // Scaffold to handle layout
     Scaffold(
@@ -55,6 +58,9 @@ fun CreateCharacterScreen() {
                         Text(text = "Select Race")
                         DropdownMenu(selectedRace, listOf("Human", "Elf", "Dwarf", "Halfling")) {
                             selectedRace = it
+                            traitsAndAbilities = generateTraitsAndAbilities(it, selectedArchetype)
+                            generatedName = generateRandomName(selectedRace)
+                            stats = generateStats()
                         }
                     }
 
@@ -63,9 +69,15 @@ fun CreateCharacterScreen() {
                         Text(text = "Select Archetype")
                         DropdownMenu(selectedArchetype, listOf("Innkeeper", "Shop Owner", "Farmer", "Street Urchin")) {
                             selectedArchetype = it
+                            traitsAndAbilities = generateTraitsAndAbilities(selectedRace, it)
+                            stats = generateStats()
                         }
                     }
                 }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Text(text = generatedName, style = MaterialTheme.typography.headlineMedium)
 
                 Spacer(modifier = Modifier.height(24.dp))
 
@@ -79,36 +91,40 @@ fun CreateCharacterScreen() {
                             }
                         }
                     }
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Race and Archetype selection horizontally
+                Text(text = "Traits: ${traitsAndAbilities.first.joinToString()}", style = MaterialTheme.typography.bodyMedium)
+                Text(text = "Abilities: ${traitsAndAbilities.second.joinToString()}", style = MaterialTheme.typography.bodyMedium)
+
+                Spacer(modifier = Modifier.height(24.dp))
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     // Customize Button
-                    Button(onClick = { isCustomizationEnabled = true }) {
+                    Button(onClick = { isCustomizationEnabled = !isCustomizationEnabled }) {
                         Text("Customize Attributes")
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
                     // Button to regenerate stats
-                    Button(onClick = { stats = generateStats() }) {
-                        Text("Generate")
+                    Button(onClick = {
+                        stats = generateStats()
+                        generatedName = generateRandomName(selectedRace)
+                        traitsAndAbilities = generateTraitsAndAbilities(selectedRace, selectedArchetype)
+                    }) {
+                        Text("Re-roll")
                     }
                 }
             }
         }
     }
 }
-
-
-
-
 
 @Composable
 fun DropdownMenu(
@@ -140,7 +156,6 @@ fun DropdownMenu(
     }
 }
 
-
 @Composable
 fun StatDisplay(statName: String, statValue: Int) {
     Row(
@@ -148,8 +163,8 @@ fun StatDisplay(statName: String, statValue: Int) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = statName, style = MaterialTheme.typography.headlineMedium)
-        Text(text = statValue.toString(), style = MaterialTheme.typography.headlineMedium)
+        Text(text = statName, style = MaterialTheme.typography.headlineSmall)
+        Text(text = statValue.toString(), style = MaterialTheme.typography.headlineSmall)
     }
 }
 
@@ -167,6 +182,7 @@ fun EditableStatDisplay(
             onValueChange = { onValueChange(it.toInt()) },
             valueRange = 3f..18f,  // Assuming D&D-like range for stats
             steps = 15  // This will create step values in the range
+
         )
     }
 }
@@ -181,7 +197,41 @@ fun generateStats(): Map<String, Int> {
     return stats.associateWith { rollStat() }
 }
 
+fun generateRandomName(race: String): String {
+    val humanNames = listOf("John", "Jane", "Michael", "Sarah")
+    val elfNames = listOf("Aelar", "Faen", "Eldrin", "Lura")
+    val dwarfNames = listOf("Thrain", "Bron", "Kara", "Durin")
+    val halflingNames = listOf("Perrin", "Lila", "Milo", "Rosie")
 
+    return when (race) {
+        "Human" -> humanNames.random()
+        "Elf" -> elfNames.random()
+        "Dwarf" -> dwarfNames.random()
+        "Halfling" -> halflingNames.random()
+        else -> "Unknown"
+    }
+}
+
+fun generateTraitsAndAbilities(race: String, archetype: String): Pair<List<String>, List<String>> {
+    val raceTraits = mapOf(
+        "Human" to listOf("Adaptability", "Versatility"),
+        "Elf" to listOf("Keen Senses", "Fey Ancestry"),
+        "Dwarf" to listOf("Resilience", "Stonecunning"),
+        "Halfling" to listOf("Luck", "Bravery")
+    )
+
+    val archetypeAbilities = mapOf(
+        "Innkeeper" to listOf("Hospitality", "Insight"),
+        "Shop Owner" to listOf("Business Acumen", "Persuasion"),
+        "Farmer" to listOf("Endurance", "Animal Handling"),
+        "Street Urchin" to listOf("Stealth", "Survival")
+    )
+
+    val traits = raceTraits[race] ?: emptyList()
+    val abilities = archetypeAbilities[archetype] ?: emptyList()
+
+    return traits to abilities
+}
 
 
 
