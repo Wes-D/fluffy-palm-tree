@@ -1,6 +1,7 @@
 package com.example.charapp.ui.screens
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
@@ -11,6 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
@@ -20,6 +22,7 @@ fun CreateCharacterScreen() {
     var selectedRace by remember { mutableStateOf("Human") }
     var selectedArchetype by remember { mutableStateOf("Innkeeper") }
     var stats by remember { mutableStateOf(generateStats()) }
+    var statBonuses by remember { mutableStateOf(generateStatBonuses(selectedRace)) }
     var isCustomizationEnabled by remember { mutableStateOf(false) }
     var generatedName by remember { mutableStateOf(generateRandomName(selectedRace)) }
     var traitsAndAbilities by remember { mutableStateOf(generateTraitsAndAbilities(selectedRace, selectedArchetype)) }
@@ -56,11 +59,12 @@ fun CreateCharacterScreen() {
                     // Race Selection
                     Column {
                         Text(text = "Select Race")
-                        DropdownMenu(selectedRace, listOf("Human", "Elf", "Dwarf", "Halfling")) {
+                        DropdownMenu(selectedRace, listOf("Human", "Wood Elf", "Dark Elf", "High Elf", "Dwarf", "Halfling")) {
                             selectedRace = it
                             traitsAndAbilities = generateTraitsAndAbilities(it, selectedArchetype)
                             generatedName = generateRandomName(selectedRace)
-                            stats = generateStats()
+                            statBonuses = generateStatBonuses(it)
+                            stats = applyStatBonuses(generateStats(), statBonuses)
                         }
                     }
 
@@ -83,8 +87,9 @@ fun CreateCharacterScreen() {
 
                 // Stats Display with optional sliders
                 stats.forEach { (statName, statValue) ->
+                    val bonus = statBonuses[statName] ?: 0
                     Column {
-                        StatDisplay(statName = statName, statValue = statValue)
+                        StatDisplay(statName = statName, statValue = statValue + bonus, statBonus = bonus)
                         if (isCustomizationEnabled) {
                             EditableStatDisplay(statValue = statValue) { newValue ->
                                 stats = stats.toMutableMap().apply { this[statName] = newValue }
@@ -157,14 +162,26 @@ fun DropdownMenu(
 }
 
 @Composable
-fun StatDisplay(statName: String, statValue: Int) {
+fun StatDisplay(
+    statName: String,
+    statValue: Int,
+    statBonus: Int = 0  // Include stat bonus
+) {
+    val backgroundColor = when {
+        statBonus > 0 -> MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)  // Light Greenish color
+        statBonus < 0 -> MaterialTheme.colorScheme.error.copy(alpha = 0.2f) // Light Reddish color
+        else -> Color.Transparent
+    }
+
+    val textColor = MaterialTheme.colorScheme.onSurface
+
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().background(backgroundColor),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = statName, style = MaterialTheme.typography.headlineSmall)
-        Text(text = statValue.toString(), style = MaterialTheme.typography.headlineSmall)
+        Text(text = statName, color = textColor, style = MaterialTheme.typography.headlineSmall)
+        Text(text = "$statValue ${if (statBonus != 0) "(${statBonus})" else ""}", color = textColor, style = MaterialTheme.typography.headlineSmall)
     }
 }
 
@@ -197,6 +214,21 @@ fun generateStats(): Map<String, Int> {
     return stats.associateWith { rollStat() }
 }
 
+fun generateStatBonuses(race: String): Map<String, Int> {
+    return when (race) {
+        "Wood Elf" -> mapOf("Dexterity" to 2, "Wisdom" to 1)
+        "High Elf" -> mapOf("Dexterity" to 2, "Intelligence" to 1)
+        "Dark Elf" -> mapOf("Dexterity" to 2, "Charisma" to 1)
+        else -> emptyMap()
+    }
+}
+
+fun applyStatBonuses(stats: Map<String, Int>, bonuses: Map<String, Int>): Map<String, Int> {
+    return stats.mapValues { (statName, statValue) ->
+        statValue + (bonuses[statName] ?: 0)
+    }
+}
+
 fun generateRandomName(race: String): String {
     val humanNames = listOf("John", "Jane", "Michael", "Sarah")
     val elfNames = listOf("Aelar", "Faen", "Eldrin", "Lura")
@@ -205,7 +237,9 @@ fun generateRandomName(race: String): String {
 
     return when (race) {
         "Human" -> humanNames.random()
-        "Elf" -> elfNames.random()
+        "Wood Elf" -> elfNames.random()
+        "Dark Elf" -> elfNames.random()
+        "High Elf" -> elfNames.random()
         "Dwarf" -> dwarfNames.random()
         "Halfling" -> halflingNames.random()
         else -> "Unknown"
@@ -215,7 +249,9 @@ fun generateRandomName(race: String): String {
 fun generateTraitsAndAbilities(race: String, archetype: String): Pair<List<String>, List<String>> {
     val raceTraits = mapOf(
         "Human" to listOf("Adaptability", "Versatility"),
-        "Elf" to listOf("Keen Senses", "Fey Ancestry"),
+        "Wood Elf" to listOf("Keen Senses", "Fey Ancestry"),
+        "Dark Elf" to listOf("Keen Senses", "Fey Ancestry"),
+        "High Elf" to listOf("Keen Senses", "Fey Ancestry"),
         "Dwarf" to listOf("Resilience", "Stonecunning"),
         "Halfling" to listOf("Luck", "Bravery")
     )
