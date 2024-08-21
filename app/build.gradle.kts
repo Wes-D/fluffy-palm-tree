@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    alias(libs.plugins.compose.compiler)
+    id("org.jetbrains.kotlin.plugin.serialization") // This line applies the Kotlin serialization plugin
 }
 
 android {
@@ -47,11 +49,12 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
 }
 
 dependencies {
 
-    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.kotlinx.serialization.json.v171)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)

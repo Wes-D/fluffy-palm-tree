@@ -252,6 +252,12 @@ fun saveCharacterToJson(context: Context, characterViewModel: CharacterViewModel
         abilities = characterViewModel.abilities
     )
 
+    // Check if the data is not empty
+    if (character.name.isBlank() || character.race.isBlank()) {
+        Toast.makeText(context, "Character data is incomplete.", Toast.LENGTH_SHORT).show()
+        return
+    }
+
     val jsonString = Json.encodeToString(character)
 
     try {
