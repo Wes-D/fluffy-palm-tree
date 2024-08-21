@@ -81,10 +81,15 @@ fun AppNavGraph(navController: NavHostController, characterViewModel: CharacterV
                 stats = characterViewModel.stats,
                 traits = characterViewModel.traits,
                 abilities = characterViewModel.abilities,
-                onEditCharacter = { navController.popBackStack() },  // Pop back to the previous screen
-                onExportCharacter = { uri ->
+                onEditCharacter = { navController.popBackStack() },
+                onExportPdf = { uri ->
                     uri?.let {
-                        saveCharacterToJson(context, characterViewModel, it)
+                        generateCharacterPdf(context, characterViewModel, it)  // Handle PDF export
+                    }
+                },
+                onExportJson = { uri ->
+                    uri?.let {
+                        saveCharacterToJson(context, characterViewModel, it)  // Handle JSON export
                     }
                 },
                 onLoadCharacter = { uri ->

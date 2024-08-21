@@ -41,24 +41,33 @@ fun SummaryScreen(
     traits: List<String>,
     abilities: List<String>,
     onEditCharacter: () -> Unit,
-    onExportCharacter: (Uri?) -> Unit,  // Now we pass the Uri as a parameter
-    onLoadCharacter: (Uri?) -> Unit     // Pass Uri for loading the character
+    onExportPdf: (Uri?) -> Unit,       // Separate callback for PDF
+    onExportJson: (Uri?) -> Unit,      // Callback for JSON
+    onLoadCharacter: (Uri?) -> Unit    // Callback for loading character
 ) {
     val context = LocalContext.current  // Get the context here inside a @Composable
 
     // Set up a launcher to create the JSON document
-    val createDocumentLauncher = rememberLauncherForActivityResult(
+    val createJsonDocumentLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json"),
         onResult = { uri: Uri? ->
-            onExportCharacter(uri)  // Trigger the export with the chosen URI
+            onExportJson(uri)  // Trigger the export for JSON with the chosen URI
         }
     )
 
-    // Set up a launcher to open a JSON document
+    // Set up a launcher to open a JSON document for loading
     val openDocumentLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument(),
         onResult = { uri: Uri? ->
             onLoadCharacter(uri)  // Trigger the load with the selected URI
+        }
+    )
+
+    // Set up a launcher to create the PDF document
+    val createPdfDocumentLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/pdf"),
+        onResult = { uri: Uri? ->
+            onExportPdf(uri)  // Trigger the export for PDF with the chosen URI
         }
     )
 
@@ -121,10 +130,9 @@ fun SummaryScreen(
                     }
 
                     Button(onClick = {
-                        // Trigger the SAF launcher (CreateDocument) which will pass the URI when the user selects a location
-                        createDocumentLauncher.launch("character_data.json")
+                        createPdfDocumentLauncher.launch("character_summary.pdf")
                     }) {
-                        Text("Export")
+                        Text("Export to PDF")
                     }
                 }
                 // Load and Save Buttons
@@ -133,17 +141,15 @@ fun SummaryScreen(
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     Button(onClick = {
-                        // Launch the open document intent for loading
                         openDocumentLauncher.launch(arrayOf("application/json"))
                     }) {
                         Text("Load Character")
                     }
 
                     Button(onClick = {
-                        // Launch the create document intent for saving
-                        createDocumentLauncher.launch("character_data.json")
+                        createJsonDocumentLauncher.launch("character_data.json")
                     }) {
-                        Text("Save Character")
+                        Text("Save as JSON")
                     }
                 }
             }
